@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Faturação</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sistema de Faturação</h1>
+        </header>
+
+        <div class="invoice-form">
+            <div class="form-section">
+                <h2>Dados da Empresa</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="empresaNome">Nome da Empresa</label>
+                        <input type="text" id="empresaNome" value="Minha Empresa Lda">
+                    </div>
+                    <div class="form-group">
+                        <label for="empresaNIF">NIF</label>
+                        <input type="text" id="empresaNIF" value="123456789">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="empresaMorada">Morada</label>
+                    <input type="text" id="empresaMorada" value="Rua Principal, 123 - Lisboa">
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Dados do Cliente</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="clienteNome">Nome do Cliente</label>
+                        <input type="text" id="clienteNome">
+                    </div>
+                    <div class="form-group">
+                        <label for="clienteNIF">NIF</label>
+                        <input type="text" id="clienteNIF">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="clienteMorada">Morada</label>
+                    <input type="text" id="clienteMorada">
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Itens da Fatura</h2>
+                <div class="items-header">
+                    <span>Descrição</span>
+                    <span>Quantidade</span>
+                    <span>Preço Unitário</span>
+                    <span>Total</span>
+                    <span>Ação</span>
+                </div>
+                <div id="items-container">
+                    <div class="item-row">
+                        <input type="text" class="item-descricao" placeholder="Descrição do item">
+                        <input type="number" class="item-quantidade" value="1" min="1">
+                        <input type="number" class="item-preco" value="0" step="0.01" min="0">
+                        <span class="item-total">0.00 €</span>
+                        <button class="btn-remover" onclick="removerItem(this)">×</button>
+                    </div>
+                </div>
+                <button class="btn-adicionar" onclick="adicionarItem()">+ Adicionar Item</button>
+            </div>
+
+            <div class="form-section">
+                <h2>Resumo</h2>
+                <div class="resumo">
+                    <div class="resumo-item">
+                        <span>Subtotal:</span>
+                        <span id="subtotal">0.00 €</span>
+                    </div>
+                    <div class="resumo-item">
+                        <label for="iva">IVA (%):</label>
+                        <input type="number" id="iva" value="23" min="0" max="100">
+                    </div>
+                    <div class="resumo-item">
+                        <span>IVA:</span>
+                        <span id="valor-iva">0.00 €</span>
+                    </div>
+                    <div class="resumo-item total">
+                        <span>Total:</span>
+                        <span id="total">0.00 €</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn-gerar" onclick="gerarFatura()">Gerar Fatura</button>
+                <button class="btn-limpar" onclick="limparFormulario()">Limpar</button>
+            </div>
+        </div>
+
+        <div id="fatura-preview" class="fatura-preview hidden">
+            <h2>Pré-visualização da Fatura</h2>
+            <div class="fatura-content">
+                <!-- A fatura será gerada aqui -->
+            </div>
+            <button class="btn-imprimir" onclick="imprimirFatura()">Imprimir Fatura</button>
+            <button class="btn-voltar" onclick="voltarAoFormulario()">Voltar</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
