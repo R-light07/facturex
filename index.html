@@ -172,6 +172,114 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Seção de Relatórios -->
+            <section id="relatorios" class="content-section">
+                <div class="section-header">
+                    <h1>Relatórios e Documentos</h1>
+                    <p>Gere e exporte relatórios das suas faturas</p>
+                </div>
+
+                <div class="reports-container">
+                    <div class="reports-actions">
+                        <div class="report-filters">
+                            <div class="form-group">
+                                <label for="dataInicio">Data Início</label>
+                                <input type="date" id="dataInicio">
+                            </div>
+                            <div class="form-group">
+                                <label for="dataFim">Data Fim</label>
+                                <input type="date" id="dataFim">
+                            </div>
+                            <div class="form-group">
+                                <label for="clienteRelatorio">Cliente</label>
+                                <select id="clienteRelatorio">
+                                    <option value="">Todos os Clientes</option>
+                                </select>
+                            </div>
+                            <button class="btn-primary" onclick="gerarRelatorio()">
+                                <i class="fas fa-chart-bar"></i> Gerar Relatório
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="reports-summary">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="totalFaturas">0</span>
+                                    <span class="stat-label">Total Faturas</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-euro-sign"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="totalVendas">0.00 €</span>
+                                    <span class="stat-label">Total Vendas</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="mediaFatura">0.00 €</span>
+                                    <span class="stat-label">Média por Fatura</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-percentage"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="totalIVA">0.00 €</span>
+                                    <span class="stat-label">Total IVA</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="reports-results">
+                        <div class="results-header">
+                            <h3>Faturas do Período</h3>
+                            <div class="export-actions">
+                                <button class="btn-secondary" onclick="exportarPDF()">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </button>
+                                <button class="btn-secondary" onclick="exportarExcel()">
+                                    <i class="fas fa-file-excel"></i> Excel
+                                </button>
+                                <button class="btn-secondary" onclick="exportarCSV()">
+                                    <i class="fas fa-file-csv"></i> CSV
+                                </button>
+                            </div>
+                        </div>
+                        <div class="results-table">
+                            <table id="tabelaRelatorios">
+                                <thead>
+                                    <tr>
+                                        <th>Número</th>
+                                        <th>Data</th>
+                                        <th>Cliente</th>
+                                        <th>Subtotal</th>
+                                        <th>IVA</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="corpoTabelaRelatorios">
+                                    <!-- Dados serão preenchidos via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 
