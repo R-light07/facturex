@@ -487,7 +487,7 @@ function gerarCabecalhoFatura(numero, data, cliente) {
             <div class="cliente-info">
                 <h3 style="color: #2563eb; margin-bottom: 1rem;">Dados do Cliente</h3>
                 <p><strong>${cliente.nome}</strong></p>
-                <p>NIF: ${cliente.nif}</p>
+                <p>NUIT: ${cliente.nif}</p>
                 ${cliente.morada ? `<p>${cliente.morada}</p>` : ''}
                 ${cliente.email ? `<p>${cliente.email}</p>` : ''}
                 ${cliente.telefone ? `<p>${cliente.telefone}</p>` : ''}
