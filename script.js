@@ -94,7 +94,7 @@ function carregarListaClientes() {
             <div class="client-header">
                 <div>
                     <div class="client-name">${cliente.nome}</div>
-                    <div class="client-nif">NIF: ${cliente.nif}</div>
+                    <div class="client-nif">NUIT: ${cliente.nif}</div>
                 </div>
                 <div class="client-actions">
                     <button class="btn-icon" onclick="editarCliente('${cliente.id}')">
@@ -141,7 +141,7 @@ function filtrarClientes() {
             <div class="client-header">
                 <div>
                     <div class="client-name">${cliente.nome}</div>
-                    <div class="client-nif">NIF: ${cliente.nif}</div>
+                    <div class="client-nif">NUIT: ${cliente.nif}</div>
                 </div>
                 <div class="client-actions">
                     <button class="btn-icon" onclick="editarCliente('${cliente.id}')">
@@ -216,7 +216,7 @@ function salvarCliente(event) {
     }
     
     if (!nif) {
-        alert('NIF é um campo obrigatório.');
+        alert('NUIT é um campo obrigatório.');
         document.getElementById('nif').focus();
         return;
     }
@@ -236,7 +236,7 @@ function salvarCliente(event) {
     // Validar NIF único
     const clienteExistente = clientes.find(c => c.nif === clienteData.nif && c.id !== clienteData.id);
     if (clienteExistente) {
-        alert('Já existe um cliente com este NIF.');
+        alert('Já existe um cliente com este NUIT.');
         return;
     }
     
@@ -374,45 +374,118 @@ function calcularTotais() {
 
 // Gestão de Faturas
 function gerarFatura() {
-    // Validar dados
     if (!validarFormularioFatura()) {
         return;
     }
-    
+
     const clienteSelect = document.getElementById('clienteSelect');
     const clienteId = clienteSelect ? clienteSelect.value : null;
     const cliente = clientes.find(c => c.id === clienteId);
-    
+
     if (!cliente) {
         alert('Por favor, selecione um cliente.');
         return;
     }
-    
+
     const faturaContent = document.getElementById('faturaContent');
     if (!faturaContent) return;
-    
+
+    // Obter dados da fatura
     const numeroFatura = 'FAT' + new Date().getTime().toString().slice(-6);
     const dataEmissao = new Date().toLocaleDateString('pt-PT');
     const dataInput = document.getElementById('dataFatura');
     const dataFatura = dataInput ? dataInput.value : dataEmissao;
     
-    faturaContent.innerHTML = `
-        <div class="fatura-header" style="display: flex; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #2563eb;">
-            <div class="empresa-info">
-                <h2 style="color: #2563eb; margin-bottom: 0.5rem;">Minha Empresa Lda</h2>
-                <p>NIF: 123456789</p>
-                <p>Rua da Empresa, 123 - Lisboa</p>
-            </div>
-            <div class="fatura-info" style="text-align: right;">
-                <h1 style="color: #1e293b; margin-bottom: 1rem;">FATURA</h1>
-                <p><strong>Número:</strong> ${numeroFatura}</p>
-                <p><strong>Data:</strong> ${new Date(dataFatura).toLocaleDateString('pt-PT')}</p>
-            </div>
-        </div>
+    // Obter itens da fatura
+    const itens = obterItensFatura();
+    const subtotal = parseFloat(document.getElementById('subtotal').textContent);
+    const valorIVA = parseFloat(document.getElementById('valor-iva').textContent);
+    const total = parseFloat(document.getElementById('total').textContent);
+    const ivaPercent = document.getElementById('iva').value;
+
+    // Gerar conteúdo da fatura com quebras de página
+    const htmlFatura = gerarEstruturaFatura(
+        numeroFatura, 
+        dataFatura, 
+        cliente, 
+        itens, 
+        subtotal, 
+        valorIVA, 
+        total, 
+        ivaPercent
+    );
+
+    faturaContent.innerHTML = htmlFatura;
+
+    // Salvar fatura no histórico
+    salvarFaturaNoHistorico(numeroFatura, dataFatura, clienteId, itens, subtotal, valorIVA, total);
+
+    // Mostrar preview
+    document.getElementById('faturaPreview').classList.add('show');
+}
+
+function obterItensFatura() {
+    const itens = [];
+    document.querySelectorAll('.item-row').forEach(row => {
+        const descricao = row.querySelector('.item-descricao').value;
+        const quantidade = parseFloat(row.querySelector('.item-quantidade').value) || 0;
+        const preco = parseFloat(row.querySelector('.item-preco').value) || 0;
         
-        <div class="fatura-detalhes" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
-            <div class="cliente-info" style="background: #f8fafc; padding: 1.5rem; border-radius: 0.5rem;">
-                <h3 style="color: #2563eb; margin-bottom: 1rem;">Cliente</h3>
+        if (descricao && quantidade > 0 && preco >= 0) {
+            itens.push({
+                descricao,
+                quantidade,
+                preco,
+                total: quantidade * preco
+            });
+        }
+    });
+    return itens;
+}
+
+function gerarEstruturaFatura(numero, data, cliente, itens, subtotal, iva, total, ivaPercent) {
+    // Calcular quantas páginas serão necessárias (máximo 20 itens por página)
+    const itensPorPagina = 20;
+    const totalPaginas = Math.ceil(itens.length / itensPorPagina);
+    
+    let html = '';
+    
+    for (let pagina = 0; pagina < totalPaginas; pagina++) {
+        const inicio = pagina * itensPorPagina;
+        const fim = inicio + itensPorPagina;
+        const itensPagina = itens.slice(inicio, fim);
+        
+        html += `
+            <div class="pagina-fatura">
+                <div class="cabecalho-pagina">
+                    ${pagina === 0 ? gerarCabecalhoFatura(numero, data, cliente) : gerarCabecalhoContinuacao(numero, data, cliente, pagina + 1)}
+                </div>
+                
+                ${gerarTabelaItens(itensPagina, pagina === 0)}
+                
+                ${pagina === totalPaginas - 1 ? gerarTotaisFatura(subtotal, iva, total, ivaPercent) : ''}
+                
+                <div class="rodape-pagina">
+                    Página ${pagina + 1} de ${totalPaginas}
+                </div>
+            </div>
+        `;
+    }
+    
+    return html;
+}
+
+function gerarCabecalhoFatura(numero, data, cliente) {
+    return `
+        <div class="dadosEmpresas">
+            <div class="empresa-info">
+                <h2 style="color: #2563eb; margin-bottom: 0.5rem; font-size: 1.5rem;">Minha Empresa Lda</h2>
+                <p>NUIT: 123456789</p>
+                <p>Rua da Empresa, 123 - Lisboa</p>
+                <p>Tel: +351 123 456 789 | Email: empresa@email.com</p>
+            </div>
+            <div class="cliente-info">
+                <h3 style="color: #2563eb; margin-bottom: 1rem;">Dados do Cliente</h3>
                 <p><strong>${cliente.nome}</strong></p>
                 <p>NIF: ${cliente.nif}</p>
                 ${cliente.morada ? `<p>${cliente.morada}</p>` : ''}
@@ -421,46 +494,126 @@ function gerarFatura() {
             </div>
         </div>
         
-        <div class="fatura-itens" style="margin: 2rem 0;">
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="background: #2563eb; color: white;">
-                        <th style="padding: 1rem; text-align: left;">Descrição</th>
-                        <th style="padding: 1rem; text-align: center;">Quantidade</th>
-                        <th style="padding: 1rem; text-align: right;">Preço Unitário</th>
-                        <th style="padding: 1rem; text-align: right;">Total</th>
-                    </tr>
-                </thead>
+        <div class="fatura-header">          
+            <div class="fatura-info">
+                <h3 style="color: #2563eb; margin-bottom: 1rem;">Dados da Fatura</h3>
+                <div class="fatura-info-box">
+                    <div class="fatura-info-line">
+                        <strong>Número: </strong>
+                        <span>${numero}</span>
+                    </div>
+                    <div class="fatura-info-line">
+                        <strong>Data de Emissão: </strong>
+                        <span>${new Date(data).toLocaleDateString('pt-PT')}</span>
+                    </div>
+                    <div class="fatura-info-line">
+                        <strong>Data de Vencimento: </strong>
+                        <span>${calcularDataVencimento(data)}</span>
+                    </div>
+                    <div class="fatura-info-line">
+                        <strong>Método de Pagamento:</strong>
+                        <span>Transferência Bancária</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function gerarCabecalhoContinuacao(numero, data, cliente, pagina) {
+    return `
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2 style="color: #2563eb; margin-bottom: 0.5rem; font-size: 1.5rem;">Minha Empresa Lda</h2>
+                <p><strong>Fatura:</strong> ${numero}</p>
+            </div>
+            <div>
+                <h3 style="color: #2563eb; margin-bottom: 0.5rem;">Continuação - Página ${pagina}</h3>
+                <p><strong>Cliente:</strong> ${cliente.nome}</p>
+                <p><strong>Data:</strong> ${new Date(data).toLocaleDateString('pt-PT')}</p>
+            </div>
+        </div>
+    `;
+}
+
+function gerarTabelaItens(itens, primeiraPagina) {
+    const cabecalho = primeiraPagina ? `
+        <thead>
+            <tr>
+                <th>Descrição</th>
+                <th style="text-align: center;">Quantidade</th>
+                <th style="text-align: right;">Preço Unitário</th>
+                <th style="text-align: right;">Total</th>
+            </tr>
+        </thead>
+    ` : '';
+
+    return `
+        <div class="fatura-itens">
+            <table>
+                ${cabecalho}
                 <tbody>
-                    ${gerarLinhasItens()}
+                    ${itens.map(item => `
+                        <tr>
+                            <td>${item.descricao}</td>
+                            <td style="text-align: center;">${item.quantidade}</td>
+                            <td style="text-align: right;">${item.preco.toFixed(2)} €</td>
+                            <td style="text-align: right;">${item.total.toFixed(2)} €</td>
+                        </tr>
+                    `).join('')}
                 </tbody>
             </table>
         </div>
-        
-        <div class="fatura-totais" style="margin-top: 2rem;">
-            <table style="width: 300px; margin-left: auto; border-collapse: collapse;">
+    `;
+}
+
+function gerarTotaisFatura(subtotal, iva, total, ivaPercent) {
+    return `
+        <div class="fatura-totais">
+            <table>
                 <tr>
-                    <td style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0;">Subtotal:</td>
-                    <td style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0; text-align: right;">${document.getElementById('subtotal').textContent}</td>
+                    <td>Subtotal:</td>
+                    <td style="text-align: right;">${subtotal.toFixed(2)} €</td>
                 </tr>
                 <tr>
-                    <td style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0;">IVA (${document.getElementById('iva').value}%):</td>
-                    <td style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0; text-align: right;">${document.getElementById('valor-iva').textContent}</td>
+                    <td>IVA (${ivaPercent}%):</td>
+                    <td style="text-align: right;">${iva.toFixed(2)} €</td>
                 </tr>
-                <tr style="font-weight: bold; font-size: 1.1em;">
-                    <td style="padding: 0.75rem; color: #1e293b;">Total:</td>
-                    <td style="padding: 0.75rem; text-align: right; color: #1e293b;">${document.getElementById('total').textContent}</td>
+                <tr class="total-final">
+                    <td><strong>Total:</strong></td>
+                    <td style="text-align: right;"><strong>${total.toFixed(2)} €</strong></td>
                 </tr>
             </table>
-        </div>
-        
-        <div class="fatura-rodape" style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; text-align: center; color: #64748b;">
-            <p>Obrigado pela sua preferência!</p>
+            
+            <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; text-align: center; color: #64748b;">
+                <p><strong>Obrigado pela sua preferência!</strong></p>
+                <p>Para qualquer questão, contacte-nos através do email: empresa@email.com</p>
+            </div>
         </div>
     `;
+}
+
+function calcularDataVencimento(dataEmissao) {
+    const data = new Date(dataEmissao);
+    data.setDate(data.getDate() + 30); // 30 dias para vencimento
+    return data.toLocaleDateString('pt-PT');
+}
+
+function salvarFaturaNoHistorico(numero, data, clienteId, itens, subtotal, iva, total) {
+    const fatura = {
+        id: 'fatura_' + Date.now(),
+        numero: numero,
+        data: data,
+        clienteId: clienteId,
+        itens: itens,
+        subtotal: subtotal,
+        iva: iva,
+        total: total,
+        dataCriacao: new Date().toISOString()
+    };
     
-    // Mostrar preview
-    document.getElementById('faturaPreview').classList.add('show');
+    faturas.push(fatura);
+    salvarDados();
 }
 
 function gerarLinhasItens() {
@@ -547,7 +700,117 @@ function fecharPreview() {
 }
 
 function imprimirFatura() {
-    window.print();
+    // Criar uma nova janela para impressão
+    const printWindow = window.open('', '_blank');
+    const faturaContent = document.getElementById('faturaContent').innerHTML;
+    
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Fatura - ${document.querySelector('.fatura-info-line span')?.textContent || 'Fatura'}</title>
+            <style>
+                body { 
+                    font-family: Arial, sans-serif; 
+                    margin: 0; 
+                    padding: 0; 
+                    font-size: 12px;
+                    color: #000;
+                }
+                .dadosEmpresas {
+                    display: flex;
+                    align-items: start;
+                    justify-content: space-between;
+                    margin: 0 0 2rem;
+                }                    
+                .cliente-info {
+                    border-radius: 0.5rem;
+                    min-width: 300px;
+                }
+                .pagina-fatura {
+                    page-break-after: always;
+                    padding: 1cm;
+                    margin: 0;
+                }
+                .pagina-fatura:last-child {
+                    page-break-after: avoid;
+                }
+                .fatura-header {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+                    margin-bottom: 1rem;
+                    padding-bottom: 0.5rem;
+                    border-bottom: 2px solid #2563eb;
+                }
+                .fatura-info, .cliente-info {
+                    padding: 0.75rem;
+                    border-radius: 0.25rem;
+                    min-width: 280px;
+                }
+                .fatura-info-line {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 0.25rem;
+                    padding: 0.1rem 0;
+                }
+                .fatura-itens table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 0.5rem 0;
+                    font-size: 11px;
+                }
+                .fatura-itens th {
+                    background: #2563eb;
+                    color: white;
+                    padding: 0.5rem;
+                    text-align: left;
+                }
+                .fatura-itens td {
+                    padding: 0.5rem;
+                    border-bottom: 1px solid #ddd;
+                }
+                .fatura-totais table {
+                    width: 250px;
+                    margin-left: auto;
+                    border-collapse: collapse;
+                }
+                .fatura-totais td {
+                    padding: 0.25rem;
+                    border-bottom: 1px solid #ddd;
+                }
+                .total-final {
+                    font-weight: bold;
+                    font-size: 1.1em;
+                }
+                .rodape-pagina {
+                    margin-top: 1rem;
+                    padding-top: 0.5rem;
+                    border-top: 1px solid #ddd;
+                    text-align: center;
+                    color: #666;
+                    font-size: 10px;
+                }
+                @media print {
+                    .no-print { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            ${faturaContent}
+        </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+    
+    // Esperar que o conteúdo carregue antes de imprimir
+    printWindow.onload = function() {
+        printWindow.focus();
+        printWindow.print();
+        // Fechar a janela após impressão (opcional)
+        // printWindow.close();
+    };
 }
 
 function downloadPDF() {
