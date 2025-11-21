@@ -847,3 +847,41 @@ document.querySelectorAll('.modal-content').forEach(content => {
         e.stopPropagation();
     });
 });
+
+
+
+
+
+
+
+// Substituir as funções do localStorage por chamadas à API
+
+const API_BASE = 'http://localhost:3001/api';
+
+async function carregarClientes() {
+  try {
+    const response = await fetch(`${API_BASE}/clientes`);
+    if (!response.ok) throw new Error('Erro ao carregar clientes');
+    clientes = await response.json();
+    atualizarSelectClientes();
+  } catch (error) {
+    console.error('Erro:', error);
+    alert('Erro ao carregar clientes');
+  }
+}
+
+async function salvarClienteAPI(cliente) {
+  const method = cliente.id ? 'PUT' : 'POST';
+  const url = cliente.id ? `${API_BASE}/clientes/${cliente.id}` : `${API_BASE}/clientes`;
+  
+  const response = await fetch(url, {
+    method: method,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(cliente)
+  });
+  
+  if (!response.ok) throw new Error('Erro ao salvar cliente');
+  return await response.json();
+}
