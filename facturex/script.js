@@ -698,7 +698,7 @@ function abrirDetalhesFatura(faturaId) {
         fatura.subtotal, 
         fatura.iva, 
         fatura.total, 
-        '23'
+        '16'
     );
 
     const faturaContent = document.getElementById('faturaContent');
