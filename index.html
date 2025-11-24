@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InvoiceFlow - Sistema de Faturação</title>
+    <title>Sistema de Faturação</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -13,7 +14,7 @@
         <nav class="sidebar">
             <div class="logo">
                 <i class="fas fa-receipt"></i>
-                <span>InvoiceFlow</span>
+                <span>Facturex</span>
             </div>
             <ul class="nav-menu">
                 <li class="nav-item active">
@@ -32,6 +33,12 @@
                     <a href="#" class="nav-link" onclick="showSection('historico')">
                         <i class="fas fa-history"></i>
                         <span>Histórico</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="showSection('relatorios')">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Relatórios</span>
                     </a>
                 </li>
             </ul>
@@ -68,7 +75,7 @@
 
                             <div class="form-group">
                                 <label for="dataFatura">Data da Fatura</label>
-                                <input type="date" id="dataFatura" value="<?php echo date('Y-m-d'); ?>">
+                                <input type="date" id="dataFatura">
                             </div>
                         </div>
 
@@ -88,7 +95,7 @@
                                     <input type="text" class="item-descricao" placeholder="Descrição do item">
                                     <input type="number" class="item-quantidade" value="1" min="1">
                                     <input type="number" class="item-preco" value="0" step="0.01" min="0">
-                                    <span class="item-total">0.00 €</span>
+                                    <span class="item-total">0.00</span>
                                     <button class="btn-remove" onclick="removerItem(this)" disabled>
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -108,15 +115,15 @@
                                 <div class="summary-totals">
                                     <div class="total-line">
                                         <span>Subtotal:</span>
-                                        <span id="subtotal">0.00 €</span>
+                                        <span id="subtotal">0.00</span>
                                     </div>
                                     <div class="total-line">
                                         <span>IVA:</span>
-                                        <span id="valor-iva">0.00 €</span>
+                                        <span id="valor-iva">0.00</span>
                                     </div>
                                     <div class="total-line grand-total">
                                         <span>Total:</span>
-                                        <span id="total">0.00 €</span>
+                                        <span id="total">0.00 MZN</span>
                                     </div>
                                 </div>
                             </div>
@@ -165,10 +172,119 @@
                     <p>Visualize suas faturas anteriores</p>
                 </div>
                 <div class="history-container">
-                    <div class="empty-state">
-                        <i class="fas fa-receipt"></i>
-                        <h3>Nenhuma fatura gerada</h3>
-                        <p>As faturas que você criar aparecerão aqui</p>
+                    <div class="history-list" id="historyList">
+                        <div class="empty-state">
+                            <i class="fas fa-receipt"></i>
+                            <h3>Nenhuma fatura gerada</h3>
+                            <p>As faturas que você criar aparecerão aqui</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção de Relatórios -->
+            <section id="relatorios" class="content-section">
+                <div class="section-header">
+                    <h1>Relatórios e Documentos</h1>
+                    <p>Gere e exporte relatórios das suas faturas</p>
+                </div>
+
+                <div class="reports-container">
+                    <div class="reports-actions">
+                        <div class="report-filters">
+                            <div class="form-group">
+                                <label for="dataInicio">Data Início</label>
+                                <input type="date" id="dataInicio">
+                            </div>
+                            <div class="form-group">
+                                <label for="dataFim">Data Fim</label>
+                                <input type="date" id="dataFim">
+                            </div>
+                            <div class="form-group">
+                                <label for="clienteRelatorio">Cliente</label>
+                                <select id="clienteRelatorio">
+                                    <option value="">Todos os Clientes</option>
+                                </select>
+                            </div>
+                            <button class="btn-primary" onclick="gerarRelatorio()">
+                                <i class="fas fa-chart-bar"></i> Gerar Relatório
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="reports-summary">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="totalFaturas">0</span>
+                                    <span class="stat-label">Total Faturas</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-euro-sign"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="totalVendas">0.00 €</span>
+                                    <span class="stat-label">Total Vendas</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="mediaFatura">0.00 €</span>
+                                    <span class="stat-label">Média por Fatura</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-percentage"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="totalIVA">0.00 €</span>
+                                    <span class="stat-label">Total IVA</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="reports-results">
+                        <div class="results-header">
+                            <h3>Faturas do Período</h3>
+                            <div class="export-actions">
+                                <button class="btn-secondary" onclick="exportarPDF()">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </button>
+                                <button class="btn-secondary" onclick="exportarExcel()">
+                                    <i class="fas fa-file-excel"></i> Excel
+                                </button>
+                                <button class="btn-secondary" onclick="exportarCSV()">
+                                    <i class="fas fa-file-csv"></i> CSV
+                                </button>
+                            </div>
+                        </div>
+                        <div class="results-table">
+                            <table id="tabelaRelatorios">
+                                <thead>
+                                    <tr>
+                                        <th>Número</th>
+                                        <th>Data</th>
+                                        <th>Cliente</th>
+                                        <th>Subtotal</th>
+                                        <th>IVA</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="corpoTabelaRelatorios">
+                                    <!-- Dados serão preenchidos via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>
