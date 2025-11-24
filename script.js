@@ -526,22 +526,22 @@ function gerarCabecalhoFatura(numero, data, cliente) {
         
         <div class="fatura-header">          
             <div class="fatura-info">
-                <h3 style="color: #2563eb; margin-bottom: 1rem;">Dados da Fatura</h3>
+                <h3 style="color: #2563eb; margin-bottom: 1rem;">Original</h3>
                 <div class="fatura-info-box">
                     <div class="fatura-info-line">
                         <strong>Número: </strong>
                         <span>${numero}</span>
                     </div>
                     <div class="fatura-info-line">
-                        <strong>Data de Emissão: </strong>
+                        <strong>Data: </strong>
                         <span>${new Date(data).toLocaleDateString('pt-PT')}</span>
                     </div>
                     <div class="fatura-info-line">
-                        <strong>Data de Vencimento: </strong>
+                        <strong>Vencimento: </strong>
                         <span>${calcularDataVencimento(data)}</span>
                     </div>
                     <div class="fatura-info-line">
-                        <strong>Método de Pagamento:</strong>
+                        <strong>Método de Pag.:</strong>
                         <span>Transferência Bancária</span>
                     </div>
                 </div>
@@ -698,7 +698,7 @@ function abrirDetalhesFatura(faturaId) {
         fatura.subtotal, 
         fatura.iva, 
         fatura.total, 
-        '23'
+        '16'
     );
 
     const faturaContent = document.getElementById('faturaContent');
