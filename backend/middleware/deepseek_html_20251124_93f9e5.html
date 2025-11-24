@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imagem com Rotação ao Scroll</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7ff;
+            color: #2a2a3c;
+            overflow-x: hidden;
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #6c63ff, #4a44c9);
+            color: white;
+            padding: 1rem 5%;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            margin-right: 10px;
+            font-size: 2rem;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin: 0 1rem;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-links a:hover {
+            color: #ff6584;
+        }
+        
+        .cta-button {
+            background-color: #ff6584;
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .cta-button:hover {
+            background-color: #ff4d73;
+            transform: translateY(-2px);
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 10rem 5% 5rem;
+            display: flex;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7ff 0%, #e6e9ff 100%);
+        }
+        
+        .hero-content {
+            max-width: 600px;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            background: linear-gradient(135deg, #6c63ff, #4a44c9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            color: #6c757d;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        /* Rotating Image Section */
+        .rotating-image-section {
+            padding: 5rem 0;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #f5f7ff, #ffffff);
+        }
+        
+        .image-container {
+            width: 80%;
+            margin: 0 auto;
+            perspective: 1000px;
+            transform-style: preserve-3d;
+        }
+        
+        .rotating-image {
+            width: 100%;
+            height: 500px;
+            object-fit: cover;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            transform: rotateX(15deg) rotateY(-5deg);
+            transition: transform 0.1s ease-out;
+            will-change: transform;
+        }
+        
+        /* Content Section */
+        .content {
+            padding: 5rem 5%;
+            background-color: white;
+        }
+        
+        .content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .content p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #6c757d;
+            max-width: 800px;
+            margin: 0 auto 2rem;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: #2a2a3c;
+            color: white;
+            padding: 3rem 5% 2rem;
+            text-align: center;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .rotating-image {
+                height: 350px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .rotating-image {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <i class="fas fa-robot"></i>
+                MecAgent
+            </div>
+            <ul class="nav-links">
+                <li><a href="#">Home</a></li>
+                <li><a href="#">Features</a></li>
+                <li><a href="#">Solutions</a></li>
+                <li><a href="#">Pricing</a></li>
+                <li><a href="#">About</a></li>
+            </ul>
+            <button class="cta-button">Get Started</button>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Intelligent Automation for Your Business</h1>
+            <p>MecAgent provides cutting-edge AI solutions to automate workflows, enhance productivity, and drive innovation across your organization.</p>
+            <div class="hero-buttons">
+                <button class="cta-button">Start Free Trial</button>
+                <button class="secondary-button">Watch Demo</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rotating Image Section -->
+    <section class="rotating-image-section">
+        <div class="image-container">
+            <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80" alt="Technology" class="rotating-image">
+        </div>
+    </section>
+
+    <!-- Content Section -->
+    <section class="content">
+        <h2>How It Works</h2>
+        <p>Our platform uses advanced machine learning algorithms to analyze your business processes and identify opportunities for automation. By understanding patterns and workflows, we can create custom solutions that save time and reduce errors.</p>
+        <p>With MecAgent, you can automate repetitive tasks, streamline complex workflows, and focus on what really matters - growing your business. Our intuitive interface makes it easy to set up and monitor automated processes without any technical expertise.</p>
+        <p>Join thousands of companies that have already transformed their operations with our intelligent automation platform. Experience increased efficiency, reduced costs, and improved customer satisfaction.</p>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2023 MecAgent. All rights reserved.</p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const rotatingImage = document.querySelector('.rotating-image');
+            const imageContainer = document.querySelector('.rotating-image-section');
+            
+            function handleScroll() {
+                const rect = imageContainer.getBoundingClientRect();
+                const windowHeight = window.innerHeight;
+                
+                // Calcula quanto da seção está visível
+                const visiblePercentage = Math.max(0, Math.min(1, (windowHeight - rect.top) / (rect.height + windowHeight)));
+                
+                // Rotaciona de 15deg para 0deg em X e de -5deg para 0deg em Y
+                const rotationX = 75 - (75 * visiblePercentage);
+                const rotationY = 0 + (0 * visiblePercentage);
+                
+                rotatingImage.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+            }
+            
+            window.addEventListener('scroll', handleScroll);
+            window.addEventListener('resize', handleScroll);
+            handleScroll(); // Inicializa
+        });
+    </script>
+</body>
+</html>

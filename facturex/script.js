@@ -337,7 +337,7 @@ function adicionarItem() {
         <input type="text" class="item-descricao" placeholder="Descrição do item">
         <input type="number" class="item-quantidade" value="1" min="1">
         <input type="number" class="item-preco" value="0" step="0.01" min="0">
-        <span class="item-total">0.00 €</span>
+        <span class="item-total">0.00</span>
         <button class="btn-remove" onclick="removerItem(this)">
             <i class="fas fa-trash"></i>
         </button>
@@ -382,7 +382,7 @@ function calcularTotais() {
         const preco = parseFloat(precoInput.value) || 0;
         const totalItem = quantidade * preco;
         
-        totalSpan.textContent = totalItem.toFixed(2) + ' €';
+        totalSpan.textContent = totalItem.toFixed(2);
         subtotal += totalItem;
     });
     
@@ -397,9 +397,9 @@ function calcularTotais() {
     const valorIvaEl = document.getElementById('valor-iva');
     const totalEl = document.getElementById('total');
     
-    if (subtotalEl) subtotalEl.textContent = subtotal.toFixed(2) + ' €';
-    if (valorIvaEl) valorIvaEl.textContent = valorIVA.toFixed(2) + ' €';
-    if (totalEl) totalEl.textContent = total.toFixed(2) + ' €';
+    if (subtotalEl) subtotalEl.textContent = subtotal.toFixed(2);
+    if (valorIvaEl) valorIvaEl.textContent = valorIVA.toFixed(2);
+    if (totalEl) totalEl.textContent = total.toFixed(2) + ' MZN';
 }
 
 // Gestão de Faturas
@@ -509,10 +509,10 @@ function gerarCabecalhoFatura(numero, data, cliente) {
     return `
         <div class="dadosEmpresas">
             <div class="empresa-info">
-                <h2 style="color: #2563eb; margin-bottom: 0.5rem; font-size: 1.5rem;">Minha Empresa Lda</h2>
+                <h2 style="color: #2563eb; margin-bottom: 0.5rem; font-size: 1.5rem;">Liteshutter</h2>
                 <p>NUIT: 123456789</p>
-                <p>Rua da Empresa, 123 - Lisboa</p>
-                <p>Tel: +351 123 456 789 | Email: empresa@email.com</p>
+                <p>Av. Maria de Lurdes Mutola, Nr. 1023, Maputo</p>
+                <p>Tel: +258 842525842 | Email: liteshutter@gmail.com</p>
             </div>
             <div class="cliente-info">
                 <h3 style="color: #2563eb; margin-bottom: 1rem;">Dados do Cliente</h3>
@@ -587,8 +587,8 @@ function gerarTabelaItens(itens, primeiraPagina) {
                         <tr>
                             <td>${item.descricao}</td>
                             <td style="text-align: center;">${item.quantidade}</td>
-                            <td style="text-align: right;">${item.preco.toFixed(2)} €</td>
-                            <td style="text-align: right;">${item.total.toFixed(2)} €</td>
+                            <td style="text-align: right;">${item.preco.toFixed(2)}</td>
+                            <td style="text-align: right;">${item.total.toFixed(2)} MZN</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -603,15 +603,15 @@ function gerarTotaisFatura(subtotal, iva, total, ivaPercent) {
             <table>
                 <tr>
                     <td>Subtotal:</td>
-                    <td style="text-align: right;">${subtotal.toFixed(2)} €</td>
+                    <td style="text-align: right;">${subtotal.toFixed(2)}</td>
                 </tr>
                 <tr>
                     <td>IVA (${ivaPercent}%):</td>
-                    <td style="text-align: right;">${iva.toFixed(2)} €</td>
+                    <td style="text-align: right;">${iva.toFixed(2)}</td>
                 </tr>
                 <tr class="total-final">
                     <td><strong>Total:</strong></td>
-                    <td style="text-align: right;"><strong>${total.toFixed(2)} €</strong></td>
+                    <td style="text-align: right;"><strong>${total.toFixed(2)} MZN</strong></td>
                 </tr>
             </table>
             
@@ -672,7 +672,7 @@ function carregarHistoricoFaturas() {
                         <div class="client-nif">Data: ${new Date(fatura.data).toLocaleDateString('pt-PT')}</div>
                     </div>
                     <div class="client-actions">
-                        <span style="font-weight: bold; color: var(--primary);">${fatura.total.toFixed(2)} €</span>
+                        <span style="font-weight: bold; color: var(--primary);">${fatura.total.toFixed(2)} MZN</span>
                     </div>
                 </div>
                 <div class="client-info">
@@ -843,9 +843,9 @@ function exibirRelatorio(faturasFiltradas) {
                 <td>${fatura.numero}</td>
                 <td>${new Date(fatura.data).toLocaleDateString('pt-PT')}</td>
                 <td>${cliente.nome || 'Cliente não encontrado'}</td>
-                <td>${fatura.subtotal.toFixed(2)} €</td>
-                <td>${fatura.iva.toFixed(2)} €</td>
-                <td><strong>${fatura.total.toFixed(2)} €</strong></td>
+                <td>${fatura.subtotal.toFixed(2)}</td>
+                <td>${fatura.iva.toFixed(2)}</td>
+                <td><strong>${fatura.total.toFixed(2)} MZN</strong></td>
             </tr>
         `;
     }).join('');
@@ -858,9 +858,9 @@ function atualizarEstatisticas(faturasFiltradas) {
     const mediaFatura = totalFaturas > 0 ? totalVendas / totalFaturas : 0;
     
     document.getElementById('totalFaturas').textContent = totalFaturas;
-    document.getElementById('totalVendas').textContent = totalVendas.toFixed(2) + ' €';
-    document.getElementById('mediaFatura').textContent = mediaFatura.toFixed(2) + ' €';
-    document.getElementById('totalIVA').textContent = totalIVA.toFixed(2) + ' €';
+    document.getElementById('totalVendas').textContent = totalVendas.toFixed(2);
+    document.getElementById('mediaFatura').textContent = mediaFatura.toFixed(2);
+    document.getElementById('totalIVA').textContent = totalIVA.toFixed(2) + ' MZN';
 }
 
 function exportarPDF() {
@@ -915,7 +915,7 @@ function exportarPDF() {
         doc.text(fatura.numero, 22, yPos);
         doc.text(new Date(fatura.data).toLocaleDateString('pt-PT'), 50, yPos);
         doc.text(cliente.nome || '-', 80, yPos);
-        doc.text(fatura.total.toFixed(2) + ' €', 150, yPos);
+        doc.text(fatura.total.toFixed(2) + ' MZN', 150, yPos);
         
         yPos += 8;
         
@@ -936,7 +936,7 @@ function exportarPDF() {
     const totalFaturas = faturasFiltradas.length;
     
     doc.text(`Total de Faturas: ${totalFaturas}`, 20, yPos);
-    doc.text(`Valor Total: ${totalVendas.toFixed(2)} €`, 120, yPos);
+    doc.text(`Valor Total: ${totalVendas.toFixed(2)} MZN`, 120, yPos);
     
     // Rodapé
     yPos += 20;
@@ -979,7 +979,7 @@ function exportarExcel() {
     const totalFaturas = faturasFiltradas.length;
     
     csvContent += `\n;;;Total Faturas:;${totalFaturas};;\n`;
-    csvContent += `;;;Valor Total:;;;${totalVendas.toFixed(2).replace('.', ',')} €`;
+    csvContent += `;;;Valor Total:;;;${totalVendas.toFixed(2).replace('.', ',')} MZN`;
     
     const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');

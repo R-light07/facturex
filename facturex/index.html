@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InvoiceFlow - Sistema de Faturação</title>
+    <title>Sistema de Faturação</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -14,7 +14,7 @@
         <nav class="sidebar">
             <div class="logo">
                 <i class="fas fa-receipt"></i>
-                <span>InvoiceFlow</span>
+                <span>Facturex</span>
             </div>
             <ul class="nav-menu">
                 <li class="nav-item active">
@@ -95,7 +95,7 @@
                                     <input type="text" class="item-descricao" placeholder="Descrição do item">
                                     <input type="number" class="item-quantidade" value="1" min="1">
                                     <input type="number" class="item-preco" value="0" step="0.01" min="0">
-                                    <span class="item-total">0.00 €</span>
+                                    <span class="item-total">0.00</span>
                                     <button class="btn-remove" onclick="removerItem(this)" disabled>
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -115,15 +115,15 @@
                                 <div class="summary-totals">
                                     <div class="total-line">
                                         <span>Subtotal:</span>
-                                        <span id="subtotal">0.00 €</span>
+                                        <span id="subtotal">0.00</span>
                                     </div>
                                     <div class="total-line">
                                         <span>IVA:</span>
-                                        <span id="valor-iva">0.00 €</span>
+                                        <span id="valor-iva">0.00</span>
                                     </div>
                                     <div class="total-line grand-total">
                                         <span>Total:</span>
-                                        <span id="total">0.00 €</span>
+                                        <span id="total">0.00 MZN</span>
                                     </div>
                                 </div>
                             </div>
