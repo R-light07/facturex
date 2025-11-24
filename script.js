@@ -617,7 +617,7 @@ function gerarTotaisFatura(subtotal, iva, total, ivaPercent) {
             
             <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; text-align: center; color: #64748b;">
                 <p><strong>Obrigado pela sua preferência!</strong></p>
-                <p>Para qualquer questão, contacte-nos através do email: empresa@email.com</p>
+                <p>Para qualquer questão, contacte-nos através do email: liteshutter@gmail.com</p>
             </div>
         </div>
     `;
