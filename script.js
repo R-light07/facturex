@@ -9,10 +9,18 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function inicializarApp() {
+    // Configurar data atual no formulário
+    const dataInput = document.getElementById('dataFatura');
+    if (dataInput) {
+        dataInput.value = new Date().toISOString().split('T')[0];
+    }
+    
     carregarClientes();
     inicializarEventListeners();
     calcularTotais();
     carregarListaClientes();
+    carregarHistoricoFaturas();
+    inicializarRelatorios();
 }
 
 function inicializarEventListeners() {
@@ -30,6 +38,33 @@ function inicializarEventListeners() {
     if (searchInput) {
         searchInput.addEventListener('input', filtrarClientes);
     }
+}
+
+function inicializarRelatorios() {
+    // Definir datas padrão (últimos 30 dias)
+    const dataFim = new Date();
+    const dataInicio = new Date();
+    dataInicio.setDate(dataInicio.getDate() - 30);
+    
+    document.getElementById('dataInicio').value = dataInicio.toISOString().split('T')[0];
+    document.getElementById('dataFim').value = dataFim.toISOString().split('T')[0];
+    
+    // Carregar clientes no filtro
+    carregarClientesRelatorio();
+}
+
+function carregarClientesRelatorio() {
+    const select = document.getElementById('clienteRelatorio');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">Todos os Clientes</option>';
+    
+    clientes.forEach(cliente => {
+        const option = document.createElement('option');
+        option.value = cliente.id;
+        option.textContent = cliente.nome;
+        select.appendChild(option);
+    });
 }
 
 // Gestão de Seções
@@ -56,6 +91,8 @@ function showSection(sectionId) {
     // Carregar dados específicos da seção
     if (sectionId === 'clientes') {
         carregarListaClientes();
+    } else if (sectionId === 'historico') {
+        carregarHistoricoFaturas();
     }
 }
 
@@ -90,17 +127,17 @@ function carregarListaClientes() {
     }
     
     grid.innerHTML = clientes.map(cliente => `
-        <div class="client-card">
+        <div class="client-card" onclick="selecionarCliente('${cliente.id}')">
             <div class="client-header">
                 <div>
                     <div class="client-name">${cliente.nome}</div>
                     <div class="client-nif">NUIT: ${cliente.nif}</div>
                 </div>
                 <div class="client-actions">
-                    <button class="btn-icon" onclick="editarCliente('${cliente.id}')">
+                    <button class="btn-icon" onclick="editarCliente('${cliente.id}', event)">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn-icon" onclick="excluirCliente('${cliente.id}')">
+                    <button class="btn-icon" onclick="excluirCliente('${cliente.id}', event)">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -137,17 +174,17 @@ function filtrarClientes() {
     }
     
     grid.innerHTML = clientesFiltrados.map(cliente => `
-        <div class="client-card">
+        <div class="client-card" onclick="selecionarCliente('${cliente.id}')">
             <div class="client-header">
                 <div>
                     <div class="client-name">${cliente.nome}</div>
                     <div class="client-nif">NUIT: ${cliente.nif}</div>
                 </div>
                 <div class="client-actions">
-                    <button class="btn-icon" onclick="editarCliente('${cliente.id}')">
+                    <button class="btn-icon" onclick="editarCliente('${cliente.id}', event)">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn-icon" onclick="excluirCliente('${cliente.id}')">
+                    <button class="btn-icon" onclick="excluirCliente('${cliente.id}', event)">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -196,8 +233,6 @@ function fecharModalCliente() {
 function salvarCliente(event) {
     event.preventDefault();
     
-    console.log('Salvando cliente...');
-    
     // Obter valores diretamente dos inputs
     const clienteId = document.getElementById('clienteId').value;
     const nome = document.getElementById('nome').value.trim();
@@ -205,8 +240,6 @@ function salvarCliente(event) {
     const telefone = document.getElementById('telefone').value.trim();
     const nif = document.getElementById('nif').value.trim();
     const morada = document.getElementById('morada').value.trim();
-    
-    console.log('Dados do formulário:', { nome, nif, clienteId });
     
     // Validar campos obrigatórios
     if (!nome) {
@@ -231,8 +264,6 @@ function salvarCliente(event) {
         dataCriacao: new Date().toISOString()
     };
     
-    console.log('Dados do cliente a salvar:', clienteData);
-    
     // Validar NIF único
     const clienteExistente = clientes.find(c => c.nif === clienteData.nif && c.id !== clienteData.id);
     if (clienteExistente) {
@@ -246,17 +277,16 @@ function salvarCliente(event) {
             const index = clientes.findIndex(c => c.id === clienteData.id);
             if (index !== -1) {
                 clientes[index] = { ...clientes[index], ...clienteData };
-                console.log('Cliente atualizado:', clientes[index]);
             }
         } else {
             // Adicionar novo cliente
             clientes.push(clienteData);
-            console.log('Novo cliente adicionado:', clienteData);
         }
         
         salvarDados();
         carregarClientes();
         carregarListaClientes();
+        carregarClientesRelatorio();
         fecharModalCliente();
         
         alert(clienteEditando ? 'Cliente atualizado com sucesso!' : 'Cliente adicionado com sucesso!');
@@ -267,27 +297,27 @@ function salvarCliente(event) {
     }
 }
 
-function editarCliente(clienteId) {
-    console.log('Editando cliente:', clienteId);
+function editarCliente(clienteId, event) {
+    event.stopPropagation();
     abrirModalCliente(clienteId);
 }
 
-function excluirCliente(clienteId) {
+function excluirCliente(clienteId, event) {
+    event.stopPropagation();
+    
     if (confirm('Tem certeza que deseja excluir este cliente?')) {
         clientes = clientes.filter(c => c.id !== clienteId);
         salvarDados();
         carregarClientes();
         carregarListaClientes();
+        carregarClientesRelatorio();
         alert('Cliente excluído com sucesso!');
     }
 }
 
 function selecionarCliente(clienteId) {
-    const select = document.getElementById('clienteSelect');
-    if (select) {
-        select.value = clienteId;
-        carregarDadosCliente();
-    }
+    document.getElementById('clienteSelect').value = clienteId;
+    carregarDadosCliente();
     showSection('fatura');
 }
 
@@ -307,7 +337,7 @@ function adicionarItem() {
         <input type="text" class="item-descricao" placeholder="Descrição do item">
         <input type="number" class="item-quantidade" value="1" min="1">
         <input type="number" class="item-preco" value="0" step="0.01" min="0">
-        <span class="item-total">0.00 €</span>
+        <span class="item-total">0.00</span>
         <button class="btn-remove" onclick="removerItem(this)">
             <i class="fas fa-trash"></i>
         </button>
@@ -352,7 +382,7 @@ function calcularTotais() {
         const preco = parseFloat(precoInput.value) || 0;
         const totalItem = quantidade * preco;
         
-        totalSpan.textContent = totalItem.toFixed(2) + ' €';
+        totalSpan.textContent = totalItem.toFixed(2);
         subtotal += totalItem;
     });
     
@@ -367,9 +397,9 @@ function calcularTotais() {
     const valorIvaEl = document.getElementById('valor-iva');
     const totalEl = document.getElementById('total');
     
-    if (subtotalEl) subtotalEl.textContent = subtotal.toFixed(2) + ' €';
-    if (valorIvaEl) valorIvaEl.textContent = valorIVA.toFixed(2) + ' €';
-    if (totalEl) totalEl.textContent = total.toFixed(2) + ' €';
+    if (subtotalEl) subtotalEl.textContent = subtotal.toFixed(2);
+    if (valorIvaEl) valorIvaEl.textContent = valorIVA.toFixed(2);
+    if (totalEl) totalEl.textContent = total.toFixed(2) + ' MZN';
 }
 
 // Gestão de Faturas
@@ -479,10 +509,10 @@ function gerarCabecalhoFatura(numero, data, cliente) {
     return `
         <div class="dadosEmpresas">
             <div class="empresa-info">
-                <h2 style="color: #2563eb; margin-bottom: 0.5rem; font-size: 1.5rem;">Minha Empresa Lda</h2>
+                <h2 style="color: #2563eb; margin-bottom: 0.5rem; font-size: 1.5rem;">Liteshutter</h2>
                 <p>NUIT: 123456789</p>
-                <p>Rua da Empresa, 123 - Lisboa</p>
-                <p>Tel: +351 123 456 789 | Email: empresa@email.com</p>
+                <p>Av. Maria de Lurdes Mutola, Nr. 1023, Maputo</p>
+                <p>Tel: +258 842525842 | Email: liteshutter@gmail.com</p>
             </div>
             <div class="cliente-info">
                 <h3 style="color: #2563eb; margin-bottom: 1rem;">Dados do Cliente</h3>
@@ -557,8 +587,8 @@ function gerarTabelaItens(itens, primeiraPagina) {
                         <tr>
                             <td>${item.descricao}</td>
                             <td style="text-align: center;">${item.quantidade}</td>
-                            <td style="text-align: right;">${item.preco.toFixed(2)} €</td>
-                            <td style="text-align: right;">${item.total.toFixed(2)} €</td>
+                            <td style="text-align: right;">${item.preco.toFixed(2)}</td>
+                            <td style="text-align: right;">${item.total.toFixed(2)} MZN</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -573,15 +603,15 @@ function gerarTotaisFatura(subtotal, iva, total, ivaPercent) {
             <table>
                 <tr>
                     <td>Subtotal:</td>
-                    <td style="text-align: right;">${subtotal.toFixed(2)} €</td>
+                    <td style="text-align: right;">${subtotal.toFixed(2)}</td>
                 </tr>
                 <tr>
                     <td>IVA (${ivaPercent}%):</td>
-                    <td style="text-align: right;">${iva.toFixed(2)} €</td>
+                    <td style="text-align: right;">${iva.toFixed(2)}</td>
                 </tr>
                 <tr class="total-final">
                     <td><strong>Total:</strong></td>
-                    <td style="text-align: right;"><strong>${total.toFixed(2)} €</strong></td>
+                    <td style="text-align: right;"><strong>${total.toFixed(2)} MZN</strong></td>
                 </tr>
             </table>
             
@@ -614,26 +644,68 @@ function salvarFaturaNoHistorico(numero, data, clienteId, itens, subtotal, iva, 
     
     faturas.push(fatura);
     salvarDados();
+    carregarHistoricoFaturas();
 }
 
-function gerarLinhasItens() {
-    let linhas = '';
-    document.querySelectorAll('.item-row').forEach(row => {
-        const descricao = row.querySelector('.item-descricao').value || 'Item sem descrição';
-        const quantidade = row.querySelector('.item-quantidade').value;
-        const preco = parseFloat(row.querySelector('.item-preco').value).toFixed(2);
-        const total = row.querySelector('.item-total').textContent;
-        
-        linhas += `
-            <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 1rem;">${descricao}</td>
-                <td style="padding: 1rem; text-align: center;">${quantidade}</td>
-                <td style="padding: 1rem; text-align: right;">${preco} €</td>
-                <td style="padding: 1rem; text-align: right;">${total}</td>
-            </tr>
+function carregarHistoricoFaturas() {
+    const historyList = document.getElementById('historyList');
+    if (!historyList) return;
+    
+    if (faturas.length === 0) {
+        historyList.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-receipt"></i>
+                <h3>Nenhuma fatura gerada</h3>
+                <p>As faturas que você criar aparecerão aqui</p>
+            </div>
         `;
-    });
-    return linhas;
+        return;
+    }
+    
+    historyList.innerHTML = faturas.map(fatura => {
+        const cliente = clientes.find(c => c.id === fatura.clienteId) || {};
+        return `
+            <div class="client-card" onclick="abrirDetalhesFatura('${fatura.id}')">
+                <div class="client-header">
+                    <div>
+                        <div class="client-name">${fatura.numero} - ${cliente.nome || 'Cliente não encontrado'}</div>
+                        <div class="client-nif">Data: ${new Date(fatura.data).toLocaleDateString('pt-PT')}</div>
+                    </div>
+                    <div class="client-actions">
+                        <span style="font-weight: bold; color: var(--primary);">${fatura.total.toFixed(2)} MZN</span>
+                    </div>
+                </div>
+                <div class="client-info">
+                    <div><i class="fas fa-receipt"></i> ${fatura.itens.length} itens</div>
+                    <div><i class="fas fa-calendar"></i> ${new Date(fatura.dataCriacao).toLocaleDateString('pt-PT')}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function abrirDetalhesFatura(faturaId) {
+    const fatura = faturas.find(f => f.id === faturaId);
+    if (!fatura) return;
+    
+    const cliente = clientes.find(c => c.id === fatura.clienteId) || {};
+    
+    const htmlFatura = gerarEstruturaFatura(
+        fatura.numero, 
+        fatura.data, 
+        cliente, 
+        fatura.itens, 
+        fatura.subtotal, 
+        fatura.iva, 
+        fatura.total, 
+        '23'
+    );
+
+    const faturaContent = document.getElementById('faturaContent');
+    if (faturaContent) {
+        faturaContent.innerHTML = htmlFatura;
+        document.getElementById('faturaPreview').classList.add('show');
+    }
 }
 
 function validarFormularioFatura() {
@@ -700,122 +772,238 @@ function fecharPreview() {
 }
 
 function imprimirFatura() {
-    // Criar uma nova janela para impressão
-    const printWindow = window.open('', '_blank');
-    const faturaContent = document.getElementById('faturaContent').innerHTML;
-    
-    printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Fatura - ${document.querySelector('.fatura-info-line span')?.textContent || 'Fatura'}</title>
-            <style>
-                body { 
-                    font-family: Arial, sans-serif; 
-                    margin: 0; 
-                    padding: 0; 
-                    font-size: 12px;
-                    color: #000;
-                }
-                .dadosEmpresas {
-                    display: flex;
-                    align-items: start;
-                    justify-content: space-between;
-                    margin: 0 0 2rem;
-                }                    
-                .cliente-info {
-                    border-radius: 0.5rem;
-                    min-width: 300px;
-                }
-                .pagina-fatura {
-                    page-break-after: always;
-                    padding: 1cm;
-                    margin: 0;
-                }
-                .pagina-fatura:last-child {
-                    page-break-after: avoid;
-                }
-                .fatura-header {
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: space-between;
-                    margin-bottom: 1rem;
-                    padding-bottom: 0.5rem;
-                    border-bottom: 2px solid #2563eb;
-                }
-                .fatura-info, .cliente-info {
-                    padding: 0.75rem;
-                    border-radius: 0.25rem;
-                    min-width: 280px;
-                }
-                .fatura-info-line {
-                    display: flex;
-                    justify-content: space-between;
-                    margin-bottom: 0.25rem;
-                    padding: 0.1rem 0;
-                }
-                .fatura-itens table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin: 0.5rem 0;
-                    font-size: 11px;
-                }
-                .fatura-itens th {
-                    background: #2563eb;
-                    color: white;
-                    padding: 0.5rem;
-                    text-align: left;
-                }
-                .fatura-itens td {
-                    padding: 0.5rem;
-                    border-bottom: 1px solid #ddd;
-                }
-                .fatura-totais table {
-                    width: 250px;
-                    margin-left: auto;
-                    border-collapse: collapse;
-                }
-                .fatura-totais td {
-                    padding: 0.25rem;
-                    border-bottom: 1px solid #ddd;
-                }
-                .total-final {
-                    font-weight: bold;
-                    font-size: 1.1em;
-                }
-                .rodape-pagina {
-                    margin-top: 1rem;
-                    padding-top: 0.5rem;
-                    border-top: 1px solid #ddd;
-                    text-align: center;
-                    color: #666;
-                    font-size: 10px;
-                }
-                @media print {
-                    .no-print { display: none; }
-                }
-            </style>
-        </head>
-        <body>
-            ${faturaContent}
-        </body>
-        </html>
-    `);
-    
-    printWindow.document.close();
-    
-    // Esperar que o conteúdo carregue antes de imprimir
-    printWindow.onload = function() {
-        printWindow.focus();
-        printWindow.print();
-        // Fechar a janela após impressão (opcional)
-        // printWindow.close();
-    };
+    window.print();
 }
 
 function downloadPDF() {
-    alert('Funcionalidade de download PDF será implementada em breve!');
-    // Em uma implementação real, você usaria uma biblioteca como jsPDF
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Obter conteúdo da fatura
+    const faturaContent = document.getElementById('faturaContent');
+    if (!faturaContent) return;
+    
+    // Aqui você implementaria a lógica para converter o HTML em PDF
+    // Esta é uma implementação básica - em produção use uma biblioteca mais robusta
+    doc.text('Funcionalidade PDF em desenvolvimento', 20, 20);
+    doc.save('fatura.pdf');
+}
+
+// Sistema de Relatórios
+function gerarRelatorio() {
+    const dataInicio = document.getElementById('dataInicio').value;
+    const dataFim = document.getElementById('dataFim').value;
+    const clienteId = document.getElementById('clienteRelatorio').value;
+    
+    if (!dataInicio || !dataFim) {
+        alert('Por favor, selecione o período do relatório.');
+        return;
+    }
+    
+    const faturasFiltradas = filtrarFaturas(dataInicio, dataFim, clienteId);
+    exibirRelatorio(faturasFiltradas);
+    atualizarEstatisticas(faturasFiltradas);
+}
+
+function filtrarFaturas(dataInicio, dataFim, clienteId) {
+    return faturas.filter(fatura => {
+        const dataFatura = new Date(fatura.data);
+        const inicio = new Date(dataInicio);
+        const fim = new Date(dataFim);
+        fim.setHours(23, 59, 59, 999);
+        
+        const dataValida = dataFatura >= inicio && dataFatura <= fim;
+        const clienteValido = !clienteId || fatura.clienteId === clienteId;
+        
+        return dataValida && clienteValido;
+    });
+}
+
+function exibirRelatorio(faturasFiltradas) {
+    const corpoTabela = document.getElementById('corpoTabelaRelatorios');
+    if (!corpoTabela) return;
+    
+    if (faturasFiltradas.length === 0) {
+        corpoTabela.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-light);">
+                    <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                    Nenhuma fatura encontrada para o período selecionado
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    corpoTabela.innerHTML = faturasFiltradas.map(fatura => {
+        const cliente = clientes.find(c => c.id === fatura.clienteId) || {};
+        
+        return `
+            <tr onclick="abrirDetalhesFatura('${fatura.id}')" style="cursor: pointer;">
+                <td>${fatura.numero}</td>
+                <td>${new Date(fatura.data).toLocaleDateString('pt-PT')}</td>
+                <td>${cliente.nome || 'Cliente não encontrado'}</td>
+                <td>${fatura.subtotal.toFixed(2)}</td>
+                <td>${fatura.iva.toFixed(2)}</td>
+                <td><strong>${fatura.total.toFixed(2)} MZN</strong></td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function atualizarEstatisticas(faturasFiltradas) {
+    const totalFaturas = faturasFiltradas.length;
+    const totalVendas = faturasFiltradas.reduce((sum, fatura) => sum + fatura.total, 0);
+    const totalIVA = faturasFiltradas.reduce((sum, fatura) => sum + fatura.iva, 0);
+    const mediaFatura = totalFaturas > 0 ? totalVendas / totalFaturas : 0;
+    
+    document.getElementById('totalFaturas').textContent = totalFaturas;
+    document.getElementById('totalVendas').textContent = totalVendas.toFixed(2);
+    document.getElementById('mediaFatura').textContent = mediaFatura.toFixed(2);
+    document.getElementById('totalIVA').textContent = totalIVA.toFixed(2) + ' MZN';
+}
+
+function exportarPDF() {
+    const faturasFiltradas = obterFaturasFiltradasAtuais();
+    
+    if (faturasFiltradas.length === 0) {
+        alert('Não há dados para exportar.');
+        return;
+    }
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Cabeçalho
+    doc.setFontSize(20);
+    doc.setTextColor(40, 40, 40);
+    doc.text('Relatório de Faturas', 20, 30);
+    
+    // Período
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    const dataInicio = document.getElementById('dataInicio').value;
+    const dataFim = document.getElementById('dataFim').value;
+    doc.text(`Período: ${new Date(dataInicio).toLocaleDateString('pt-PT')} a ${new Date(dataFim).toLocaleDateString('pt-PT')}`, 20, 45);
+    
+    // Tabela
+    let yPos = 60;
+    
+    // Cabeçalho da tabela
+    doc.setFillColor(37, 99, 235);
+    doc.setTextColor(255, 255, 255);
+    doc.rect(20, yPos, 170, 10, 'F');
+    doc.text('Número', 22, yPos + 7);
+    doc.text('Data', 50, yPos + 7);
+    doc.text('Cliente', 80, yPos + 7);
+    doc.text('Total', 150, yPos + 7);
+    
+    yPos += 15;
+    
+    // Linhas da tabela
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    
+    faturasFiltradas.forEach((fatura, index) => {
+        if (yPos > 270) {
+            doc.addPage();
+            yPos = 20;
+        }
+        
+        const cliente = clientes.find(c => c.id === fatura.clienteId) || {};
+        
+        doc.text(fatura.numero, 22, yPos);
+        doc.text(new Date(fatura.data).toLocaleDateString('pt-PT'), 50, yPos);
+        doc.text(cliente.nome || '-', 80, yPos);
+        doc.text(fatura.total.toFixed(2) + ' MZN', 150, yPos);
+        
+        yPos += 8;
+        
+        // Linha separadora
+        if (index < faturasFiltradas.length - 1) {
+            doc.setDrawColor(200, 200, 200);
+            doc.line(20, yPos - 2, 190, yPos - 2);
+            yPos += 5;
+        }
+    });
+    
+    // Totais
+    yPos += 10;
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    
+    const totalVendas = faturasFiltradas.reduce((sum, fatura) => sum + fatura.total, 0);
+    const totalFaturas = faturasFiltradas.length;
+    
+    doc.text(`Total de Faturas: ${totalFaturas}`, 20, yPos);
+    doc.text(`Valor Total: ${totalVendas.toFixed(2)} MZN`, 120, yPos);
+    
+    // Rodapé
+    yPos += 20;
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Relatório gerado em ${new Date().toLocaleDateString('pt-PT')} às ${new Date().toLocaleTimeString('pt-PT')}`, 20, yPos);
+    
+    // Salvar PDF
+    doc.save(`relatorio-faturas-${new Date().toISOString().split('T')[0]}.pdf`);
+}
+
+function exportarExcel() {
+    const faturasFiltradas = obterFaturasFiltradasAtuais();
+    
+    if (faturasFiltradas.length === 0) {
+        alert('Não há dados para exportar.');
+        return;
+    }
+    
+    let csvContent = "Número;Data;Cliente;NUIT;Subtotal;IVA;Total\n";
+    
+    faturasFiltradas.forEach(fatura => {
+        const cliente = clientes.find(c => c.id === fatura.clienteId) || {};
+        
+        const linha = [
+            fatura.numero,
+            new Date(fatura.data).toLocaleDateString('pt-PT'),
+            `"${cliente.nome || ''}"`,
+            cliente.nif || '',
+            fatura.subtotal.toFixed(2).replace('.', ','),
+            fatura.iva.toFixed(2).replace('.', ','),
+            fatura.total.toFixed(2).replace('.', ',')
+        ].join(';');
+        
+        csvContent += linha + '\n';
+    });
+    
+    // Adicionar totais
+    const totalVendas = faturasFiltradas.reduce((sum, fatura) => sum + fatura.total, 0);
+    const totalFaturas = faturasFiltradas.length;
+    
+    csvContent += `\n;;;Total Faturas:;${totalFaturas};;\n`;
+    csvContent += `;;;Valor Total:;;;${totalVendas.toFixed(2).replace('.', ',')} MZN`;
+    
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `relatorio-faturas-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function exportarCSV() {
+    exportarExcel(); // Reutiliza a função de Excel para CSV
+}
+
+function obterFaturasFiltradasAtuais() {
+    const dataInicio = document.getElementById('dataInicio').value;
+    const dataFim = document.getElementById('dataFim').value;
+    const clienteId = document.getElementById('clienteRelatorio').value;
+    
+    return filtrarFaturas(dataInicio, dataFim, clienteId);
 }
 
 // Utilitários
@@ -847,41 +1035,3 @@ document.querySelectorAll('.modal-content').forEach(content => {
         e.stopPropagation();
     });
 });
-
-
-
-
-
-
-
-// Substituir as funções do localStorage por chamadas à API
-
-const API_BASE = 'http://localhost:3001/api';
-
-async function carregarClientes() {
-  try {
-    const response = await fetch(`${API_BASE}/clientes`);
-    if (!response.ok) throw new Error('Erro ao carregar clientes');
-    clientes = await response.json();
-    atualizarSelectClientes();
-  } catch (error) {
-    console.error('Erro:', error);
-    alert('Erro ao carregar clientes');
-  }
-}
-
-async function salvarClienteAPI(cliente) {
-  const method = cliente.id ? 'PUT' : 'POST';
-  const url = cliente.id ? `${API_BASE}/clientes/${cliente.id}` : `${API_BASE}/clientes`;
-  
-  const response = await fetch(url, {
-    method: method,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(cliente)
-  });
-  
-  if (!response.ok) throw new Error('Erro ao salvar cliente');
-  return await response.json();
-}
