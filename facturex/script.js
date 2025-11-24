@@ -388,7 +388,7 @@ function calcularTotais() {
     
     // Calcular IVA e total
     const ivaInput = document.getElementById('iva');
-    const ivaPercent = ivaInput ? parseFloat(ivaInput.value) || 0 : 23;
+    const ivaPercent = ivaInput ? parseFloat(ivaInput.value) || 0 : 16;
     const valorIVA = subtotal * (ivaPercent / 100);
     const total = subtotal + valorIVA;
     
@@ -758,7 +758,7 @@ function limparFormulario() {
         
         // Resetar IVA
         const ivaInput = document.getElementById('iva');
-        if (ivaInput) ivaInput.value = '23';
+        if (ivaInput) ivaInput.value = '16';
         
         calcularTotais();
     }
