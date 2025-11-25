@@ -388,7 +388,7 @@ function calcularTotais() {
     
     // Calcular IVA e total
     const ivaInput = document.getElementById('iva');
-    const ivaPercent = ivaInput ? parseFloat(ivaInput.value) || 0 : 23;
+    const ivaPercent = ivaInput ? parseFloat(ivaInput.value) || 0 : 16;
     const valorIVA = subtotal * (ivaPercent / 100);
     const total = subtotal + valorIVA;
     
@@ -526,22 +526,22 @@ function gerarCabecalhoFatura(numero, data, cliente) {
         
         <div class="fatura-header">          
             <div class="fatura-info">
-                <h3 style="color: #2563eb; margin-bottom: 1rem;">Original</h3>
+                <h3 style="color: #2563eb; margin-bottom: 1rem;">Dados da Fatura</h3>
                 <div class="fatura-info-box">
                     <div class="fatura-info-line">
                         <strong>Número: </strong>
                         <span>${numero}</span>
                     </div>
                     <div class="fatura-info-line">
-                        <strong>Data: </strong>
+                        <strong>Data de Emissão: </strong>
                         <span>${new Date(data).toLocaleDateString('pt-PT')}</span>
                     </div>
                     <div class="fatura-info-line">
-                        <strong>Vencimento: </strong>
+                        <strong>Data de Vencimento: </strong>
                         <span>${calcularDataVencimento(data)}</span>
                     </div>
                     <div class="fatura-info-line">
-                        <strong>Método de Pag.:</strong>
+                        <strong>Método de Pagamento:</strong>
                         <span>Transferência Bancária</span>
                     </div>
                 </div>
@@ -617,7 +617,7 @@ function gerarTotaisFatura(subtotal, iva, total, ivaPercent) {
             
             <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; text-align: center; color: #64748b;">
                 <p><strong>Obrigado pela sua preferência!</strong></p>
-                <p>Para qualquer questão, contacte-nos através do email: liteshutter@gmail.com</p>
+                <p>Para qualquer questão, contacte-nos através do email: empresa@email.com</p>
             </div>
         </div>
     `;
@@ -758,7 +758,7 @@ function limparFormulario() {
         
         // Resetar IVA
         const ivaInput = document.getElementById('iva');
-        if (ivaInput) ivaInput.value = '23';
+        if (ivaInput) ivaInput.value = '16';
         
         calcularTotais();
     }
@@ -1035,445 +1035,3 @@ document.querySelectorAll('.modal-content').forEach(content => {
         e.stopPropagation();
     });
 });
-
-// Sistema de Relatórios
-function inicializarRelatorios() {
-    // Definir datas padrão (últimos 30 dias)
-    const dataFim = new Date();
-    const dataInicio = new Date();
-    dataInicio.setDate(dataInicio.getDate() - 30);
-    
-    document.getElementById('dataInicio').value = dataInicio.toISOString().split('T')[0];
-    document.getElementById('dataFim').value = dataFim.toISOString().split('T')[0];
-    
-    // Carregar clientes no filtro
-    carregarClientesRelatorio();
-}
-
-function carregarClientesRelatorio() {
-    const select = document.getElementById('clienteRelatorio');
-    if (!select) return;
-    
-    select.innerHTML = '<option value="">Todos os Clientes</option>';
-    
-    clientes.forEach(cliente => {
-        const option = document.createElement('option');
-        option.value = cliente.id;
-        option.textContent = cliente.nome;
-        select.appendChild(option);
-    });
-}
-
-function gerarRelatorio() {
-    const dataInicio = document.getElementById('dataInicio').value;
-    const dataFim = document.getElementById('dataFim').value;
-    const clienteId = document.getElementById('clienteRelatorio').value;
-    
-    if (!dataInicio || !dataFim) {
-        alert('Por favor, selecione o período do relatório.');
-        return;
-    }
-    
-    const faturasFiltradas = filtrarFaturas(dataInicio, dataFim, clienteId);
-    exibirRelatorio(faturasFiltradas);
-    atualizarEstatisticas(faturasFiltradas);
-}
-
-function filtrarFaturas(dataInicio, dataFim, clienteId) {
-    return faturas.filter(fatura => {
-        const dataFatura = new Date(fatura.data);
-        const inicio = new Date(dataInicio);
-        const fim = new Date(dataFim);
-        fim.setHours(23, 59, 59, 999);
-        
-        const dataValida = dataFatura >= inicio && dataFatura <= fim;
-        const clienteValido = !clienteId || fatura.clienteId === clienteId;
-        
-        return dataValida && clienteValido;
-    });
-}
-
-function exibirRelatorio(faturasFiltradas) {
-    const corpoTabela = document.getElementById('corpoTabelaRelatorios');
-    if (!corpoTabela) return;
-    
-    if (faturasFiltradas.length === 0) {
-        corpoTabela.innerHTML = `
-            <tr>
-                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-light);">
-                    <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
-                    Nenhuma fatura encontrada para o período selecionado
-                </td>
-            </tr>
-        `;
-        return;
-    }
-    
-    corpoTabela.innerHTML = faturasFiltradas.map(fatura => {
-        const cliente = clientes.find(c => c.id === fatura.clienteId) || {};
-        
-        return `
-            <tr onclick="abrirDetalhesFatura('${fatura.id}')" style="cursor: pointer;">
-                <td>${fatura.numero}</td>
-                <td>${new Date(fatura.data).toLocaleDateString('pt-PT')}</td>
-                <td>${cliente.nome || 'Cliente não encontrado'}</td>
-                <td>${fatura.subtotal.toFixed(2)} €</td>
-                <td>${fatura.iva.toFixed(2)} €</td>
-                <td><strong>${fatura.total.toFixed(2)} €</strong></td>
-            </tr>
-        `;
-    }).join('');
-}
-
-function atualizarEstatisticas(faturasFiltradas) {
-    const totalFaturas = faturasFiltradas.length;
-    const totalVendas = faturasFiltradas.reduce((sum, fatura) => sum + fatura.total, 0);
-    const totalIVA = faturasFiltradas.reduce((sum, fatura) => sum + fatura.iva, 0);
-    const mediaFatura = totalFaturas > 0 ? totalVendas / totalFaturas : 0;
-    
-    document.getElementById('totalFaturas').textContent = totalFaturas;
-    document.getElementById('totalVendas').textContent = totalVendas.toFixed(2) + ' €';
-    document.getElementById('mediaFatura').textContent = mediaFatura.toFixed(2) + ' €';
-    document.getElementById('totalIVA').textContent = totalIVA.toFixed(2) + ' €';
-}
-
-// Exportação de Documentos
-function exportarPDF() {
-    const faturasFiltradas = obterFaturasFiltradasAtuais();
-    
-    if (faturasFiltradas.length === 0) {
-        alert('Não há dados para exportar.');
-        return;
-    }
-    
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    // Cabeçalho
-    doc.setFontSize(20);
-    doc.setTextColor(40, 40, 40);
-    doc.text('Relatório de Faturas', 20, 30);
-    
-    // Período
-    doc.setFontSize(12);
-    doc.setTextColor(100, 100, 100);
-    const dataInicio = document.getElementById('dataInicio').value;
-    const dataFim = document.getElementById('dataFim').value;
-    doc.text(`Período: ${new Date(dataInicio).toLocaleDateString('pt-PT')} a ${new Date(dataFim).toLocaleDateString('pt-PT')}`, 20, 45);
-    
-    // Tabela
-    let yPos = 60;
-    
-    // Cabeçalho da tabela
-    doc.setFillColor(37, 99, 235);
-    doc.setTextColor(255, 255, 255);
-    doc.rect(20, yPos, 170, 10, 'F');
-    doc.text('Número', 22, yPos + 7);
-    doc.text('Data', 50, yPos + 7);
-    doc.text('Cliente', 80, yPos + 7);
-    doc.text('Total', 150, yPos + 7);
-    
-    yPos += 15;
-    
-    // Linhas da tabela
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(10);
-    
-    faturasFiltradas.forEach((fatura, index) => {
-        if (yPos > 270) {
-            doc.addPage();
-            yPos = 20;
-        }
-        
-        const cliente = clientes.find(c => c.id === fatura.clienteId) || {};
-        
-        doc.text(fatura.numero, 22, yPos);
-        doc.text(new Date(fatura.data).toLocaleDateString('pt-PT'), 50, yPos);
-        doc.text(cliente.nome || '-', 80, yPos);
-        doc.text(fatura.total.toFixed(2) + ' €', 150, yPos);
-        
-        yPos += 8;
-        
-        // Linha separadora
-        if (index < faturasFiltradas.length - 1) {
-            doc.setDrawColor(200, 200, 200);
-            doc.line(20, yPos - 2, 190, yPos - 2);
-            yPos += 5;
-        }
-    });
-    
-    // Totais
-    yPos += 10;
-    doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
-    
-    const totalVendas = faturasFiltradas.reduce((sum, fatura) => sum + fatura.total, 0);
-    const totalFaturas = faturasFiltradas.length;
-    
-    doc.text(`Total de Faturas: ${totalFaturas}`, 20, yPos);
-    doc.text(`Valor Total: ${totalVendas.toFixed(2)} €`, 120, yPos);
-    
-    // Rodapé
-    yPos += 20;
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Relatório gerado em ${new Date().toLocaleDateString('pt-PT')} às ${new Date().toLocaleTimeString('pt-PT')}`, 20, yPos);
-    
-    // Salvar PDF
-    doc.save(`relatorio-faturas-${new Date().toISOString().split('T')[0]}.pdf`);
-}
-
-function exportarExcel() {
-    const faturasFiltradas = obterFaturasFiltradasAtuais();
-    
-    if (faturasFiltradas.length === 0) {
-        alert('Não há dados para exportar.');
-        return;
-    }
-    
-    let csvContent = "Número;Data;Cliente;NIF;Subtotal;IVA;Total\n";
-    
-    faturasFiltradas.forEach(fatura => {
-        const cliente = clientes.find(c => c.id === fatura.clienteId) || {};
-        
-        const linha = [
-            fatura.numero,
-            new Date(fatura.data).toLocaleDateString('pt-PT'),
-            `"${cliente.nome || ''}"`,
-            cliente.nif || '',
-            fatura.subtotal.toFixed(2).replace('.', ','),
-            fatura.iva.toFixed(2).replace('.', ','),
-            fatura.total.toFixed(2).replace('.', ',')
-        ].join(';');
-        
-        csvContent += linha + '\n';
-    });
-    
-    // Adicionar totais
-    const totalVendas = faturasFiltradas.reduce((sum, fatura) => sum + fatura.total, 0);
-    const totalFaturas = faturasFiltradas.length;
-    
-    csvContent += `\n;;;Total Faturas:;${totalFaturas};;\n`;
-    csvContent += `;;;Valor Total:;;;${totalVendas.toFixed(2).replace('.', ',')} €`;
-    
-    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', `relatorio-faturas-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-function exportarCSV() {
-    exportarExcel(); // Reutiliza a função de Excel para CSV
-}
-
-function obterFaturasFiltradasAtuais() {
-    const dataInicio = document.getElementById('dataInicio').value;
-    const dataFim = document.getElementById('dataFim').value;
-    const clienteId = document.getElementById('clienteRelatorio').value;
-    
-    return filtrarFaturas(dataInicio, dataFim, clienteId);
-}
-
-function abrirDetalhesFatura(faturaId) {
-    const fatura = faturas.find(f => f.id === faturaId);
-    if (!fatura) return;
-    
-    const cliente = clientes.find(c => c.id === fatura.clienteId) || {};
-    
-    const detalhesHTML = `
-        <div class="report-preview">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #2563eb;">
-                <div>
-                    <h2 style="color: #2563eb; margin-bottom: 0.5rem;">Minha Empresa Lda</h2>
-                    <p>NIF: 123456789</p>
-                    <p>Rua da Empresa, 123 - Lisboa</p>
-                </div>
-                <div style="text-align: right;">
-                    <h1 style="color: #1e293b; margin-bottom: 1rem;">FATURA</h1>
-                    <p><strong>Número:</strong> ${fatura.numero}</p>
-                    <p><strong>Data:</strong> ${new Date(fatura.data).toLocaleDateString('pt-PT')}</p>
-                </div>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
-                <div style="background: #f8fafc; padding: 1.5rem; border-radius: 0.5rem;">
-                    <h3 style="color: #2563eb; margin-bottom: 1rem;">Cliente</h3>
-                    <p><strong>${cliente.nome}</strong></p>
-                    <p>NIF: ${cliente.nif}</p>
-                    ${cliente.morada ? `<p>${cliente.morada}</p>` : ''}
-                </div>
-            </div>
-            
-            <div style="margin: 2rem 0;">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr style="background: #2563eb; color: white;">
-                            <th style="padding: 1rem; text-align: left;">Descrição</th>
-                            <th style="padding: 1rem; text-align: center;">Quantidade</th>
-                            <th style="padding: 1rem; text-align: right;">Preço Unitário</th>
-                            <th style="padding: 1rem; text-align: right;">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${fatura.itens.map(item => `
-                            <tr style="border-bottom: 1px solid #e2e8f0;">
-                                <td style="padding: 1rem;">${item.descricao}</td>
-                                <td style="padding: 1rem; text-align: center;">${item.quantidade}</td>
-                                <td style="padding: 1rem; text-align: right;">${item.preco.toFixed(2)} €</td>
-                                <td style="padding: 1rem; text-align: right;">${(item.quantidade * item.preco).toFixed(2)} €</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-            
-            <div style="margin-top: 2rem;">
-                <table style="width: 300px; margin-left: auto; border-collapse: collapse;">
-                    <tr>
-                        <td style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0;">Subtotal:</td>
-                        <td style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0; text-align: right;">${fatura.subtotal.toFixed(2)} €</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0;">IVA:</td>
-                        <td style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0; text-align: right;">${fatura.iva.toFixed(2)} €</td>
-                    </tr>
-                    <tr style="font-weight: bold; font-size: 1.1em;">
-                        <td style="padding: 0.75rem; color: #1e293b;">Total:</td>
-                        <td style="padding: 0.75rem; text-align: right; color: #1e293b;">${fatura.total.toFixed(2)} €</td>
-                    </tr>
-                </table>
-            </div>
-        </div>
-    `;
-    
-    // Criar modal para detalhes
-    const modal = document.createElement('div');
-    modal.className = 'modal show';
-    modal.innerHTML = `
-        <div class="modal-content report-modal">
-            <div class="modal-header">
-                <h3>Detalhes da Fatura</h3>
-                <button class="btn-close" onclick="this.closest('.modal').remove()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                ${detalhesHTML}
-                <div class="preview-actions">
-                    <button class="btn-primary" onclick="imprimirDetalhesFatura('${fatura.id}')">
-                        <i class="fas fa-print"></i> Imprimir
-                    </button>
-                    <button class="btn-secondary" onclick="this.closest('.modal').remove()">
-                        <i class="fas fa-times"></i> Fechar
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-}
-
-function imprimirDetalhesFatura(faturaId) {
-    const printWindow = window.open('', '_blank');
-    const fatura = faturas.find(f => f.id === faturaId);
-    const cliente = clientes.find(c => c.id === fatura.clienteId) || {};
-    
-    printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Fatura ${fatura.numero}</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 2rem; }
-                .header { display: flex; justify-content: space-between; margin-bottom: 2rem; }
-                .empresa-info h2 { color: #2563eb; margin-bottom: 0.5rem; }
-                .fatura-info { text-align: right; }
-                table { width: 100%; border-collapse: collapse; margin: 2rem 0; }
-                th { background: #2563eb; color: white; padding: 1rem; text-align: left; }
-                td { padding: 1rem; border-bottom: 1px solid #ddd; }
-                .totais { margin-left: auto; width: 300px; }
-                @media print { body { margin: 0; } }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <div class="empresa-info">
-                    <h2>Minha Empresa Lda</h2>
-                    <p>NIF: 123456789</p>
-                    <p>Rua da Empresa, 123 - Lisboa</p>
-                </div>
-                <div class="fatura-info">
-                    <h1>FATURA</h1>
-                    <p><strong>Número:</strong> ${fatura.numero}</p>
-                    <p><strong>Data:</strong> ${new Date(fatura.data).toLocaleDateString('pt-PT')}</p>
-                </div>
-            </div>
-            
-            <div>
-                <h3>Cliente: ${cliente.nome}</h3>
-                <p>NIF: ${cliente.nif}</p>
-                ${cliente.morada ? `<p>${cliente.morada}</p>` : ''}
-            </div>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>Descrição</th>
-                        <th>Qtd</th>
-                        <th>Preço</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${fatura.itens.map(item => `
-                        <tr>
-                            <td>${item.descricao}</td>
-                            <td>${item.quantidade}</td>
-                            <td>${item.preco.toFixed(2)} €</td>
-                            <td>${(item.quantidade * item.preco).toFixed(2)} €</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-            
-            <div class="totais">
-                <table>
-                    <tr>
-                        <td>Subtotal:</td>
-                        <td>${fatura.subtotal.toFixed(2)} €</td>
-                    </tr>
-                    <tr>
-                        <td>IVA:</td>
-                        <td>${fatura.iva.toFixed(2)} €</td>
-                    </tr>
-                    <tr style="font-weight: bold;">
-                        <td>Total:</td>
-                        <td>${fatura.total.toFixed(2)} €</td>
-                    </tr>
-                </table>
-            </div>
-        </body>
-        </html>
-    `);
-    
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-}
-
-// Atualizar a função inicializarApp para incluir relatórios
-function inicializarApp() {
-    carregarClientes();
-    inicializarEventListeners();
-    calcularTotais();
-    carregarListaClientes();
-    inicializarRelatorios(); // ← Adicionar esta linha
-}
