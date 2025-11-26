@@ -509,10 +509,11 @@ function gerarCabecalhoFatura(numero, data, cliente) {
     return `
         <div class="dadosEmpresas">
             <div class="empresa-info">
-                <h2 style="color: #2563eb; margin-bottom: 0.5rem; font-size: 1.5rem;">Liteshutter</h2>
+                <h2 style="color: #2563eb; margin-bottom: 0.5rem; font-size: 1.5rem;">Sigma</h2>
                 <p>NUIT: 123456789</p>
                 <p>Av. Maria de Lurdes Mutola, Nr. 1023, Maputo</p>
-                <p>Tel: +258 842525842 | Email: liteshutter@gmail.com</p>
+                <p>Tel: +258 842525842</p>
+                <p>Email: sigma@gmail.com</p>
             </div>
             <div class="cliente-info">
                 <h3 style="color: #2563eb; margin-bottom: 1rem;">Dados do Cliente</h3>
@@ -690,6 +691,12 @@ function abrirDetalhesFatura(faturaId) {
     
     const cliente = clientes.find(c => c.id === fatura.clienteId) || {};
     
+    // Guardar os dados da fatura atual para uso no PDF
+    window.faturaAtual = {
+        fatura: fatura,
+        cliente: cliente
+    };
+    
     const htmlFatura = gerarEstruturaFatura(
         fatura.numero, 
         fatura.data, 
@@ -769,6 +776,8 @@ function fecharPreview() {
     if (preview) {
         preview.classList.remove('show');
     }
+    // Limpar fatura atual
+    window.faturaAtual = null;
 }
 
 function imprimirFatura() {
