@@ -105,7 +105,7 @@ function downloadPDF() {
         ];
 
         // Calcular larguras das colunas
-        const colWidths = [40, 40, 40, 40];
+        const colWidths = [40, 40, 40, 45];
         let xPos = margin;
         
         doc.setFontSize(9);
@@ -215,6 +215,27 @@ function downloadPDF() {
         doc.setDrawColor(0, 0, 0);
         doc.line(margin, yPos, pageWidth - margin, yPos);
         yPos += 12;
+
+        //===== DADOS BANCÁRIOS =====
+
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'normal');
+
+        doc.text('Dados Bancários:', margin, yPos);
+        yPos += 4;
+        doc.text('BCI', margin, yPos);
+        yPos += 4;
+        doc.text('CONTA: 2042 3321 01 0001', margin, yPos);
+        yPos += 4;
+        doc.text('NIB: 0008 0000 0423 3210 10113', margin, yPos);
+        yPos += 8;
+
+        doc.text('BIM', margin, yPos);
+        yPos += 4;
+        doc.text('CONTA: 595232741', margin, yPos);
+        yPos += 4;
+        doc.text('NIB: 0001 0000 0059 5232 74157', margin, yPos);
+        yPos += 8;
 
         // ===== MENSAGEM FINAL =====
         doc.setFontSize(10);
